@@ -9,7 +9,9 @@ face_cascade = cv2.CascadeClassifier(haar_model)
 # captured = cv2.VideoCapture(0)
 
 # To capture from file
-captured = cv2.VideoCapture("../pexels-30fps.mp4")
+# captured = cv2.VideoCapture("D:\\user\\Downloads\\pexels-30fps.mp4")
+captured = cv2.VideoCapture("D:\\west_world.mp4")
+
 
 while True:
     _,img = captured.read()
