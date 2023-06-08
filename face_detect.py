@@ -43,7 +43,7 @@ def idnetify_faces_image(face_number,test_faces,img_detected_base,show_detected)
 
 def idnetify_faces_movie(captured,base_img):
     
-    aspect=0.75
+    aspect=0.25
     _,bigimg = captured.read()
     img = cv2.resize(bigimg, (0, 0), fx=aspect, fy=aspect)
     
@@ -116,7 +116,7 @@ if args.test_image:
     idnetify_faces_image(i, imgs_detected_test, img_detected_base,True)
 
 if args.test_movie:
-    if args.test_movie == "camera":
+    if args.test_movie.strip() == "camera":
         # To capture from camera
         captured = cv2.VideoCapture(0)
     else:
