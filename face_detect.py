@@ -29,7 +29,7 @@ def idnetify_faces_image(face_number,test_faces,img_detected_base,show_detected)
             
             if show_detected:
                 cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-                cv2.resizeWindow(window_name, nface.shape[0:2][0], nface.shape[0:2][1])
+                cv2.resizeWindow(window_name, nface.shape[0:2][1], nface.shape[0:2][0])
                 cv2.imshow(window_name,nface)
     
         os.remove(path_save_faces)
@@ -43,7 +43,7 @@ def idnetify_faces_image(face_number,test_faces,img_detected_base,show_detected)
 
 def idnetify_faces_movie(captured,base_img):
     
-    aspect=0.25
+    aspect=0.5
     _,bigimg = captured.read()
     img = cv2.resize(bigimg, (0, 0), fx=aspect, fy=aspect)
     
@@ -103,7 +103,11 @@ else:
     # base_img = cv2.imread("D:\\work\\github\\face-detect\\ID-Card 1.jpg")
     base_img = cv2.imread(args.person_image.strip())
     if base_img.any():
-        cv2.imshow("To find",base_img)
+        window_name="To find..."
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window_name, base_img.shape[0:2][1], base_img.shape[0:2][0])
+        cv2.imshow(window_name,base_img)
+        cv2.waitKey(0)
         _,img_detected_base = detect_face(base_img)
     else:
         print("The main argument is empty.")
