@@ -13,24 +13,27 @@ import face_detect
 
 @pytest.mark.parametrize("test_faces, base_image , result",[
     ("D:\\work\\github\\face-detect\\IMG_20150925_153809.jpg", "D:\\work\\github\\face-detect\\ID-Card1.jpg",[True,False]),
-    ("D:\\work\\github\\face-detect\\IMG_20150925_153809.jpg", "D:\\work\\github\\face-detect\\ID-Card1.jpg1",[False])
+    ("D:\\work\\github\\face-detect\\IMG_20150925_153809.jpg", "D:\\work\\github\\face-detect\\ID-Card1.jpg1",[False]),
+    ("", "D:\\work\\github\\face-detect\\ID-Card1.jpg1",[False]),
+    ("D:\\work\\github\\face-detect\\IMG_20150925_153809.jpg", "",[False]),
+    ("", "",[False])
 ])
-# @pytest.mark.parametrize("parameters , result",[
-#     ("-p D:\\work\\github\\face-detect\\ID-Card1.jpg -m D:\\work\\github\\face-detect\\VID_20150718_134620.mp4",[True,False])
-#     # ("D:\\work\\github\\face-detect\\IMG_20150925_153809.jpg", "", "D:\\work\\github\\face-detect\\ID-Card1.jpg1",[False,False])
-# ])
 def test_idnetify_faces_image_new(test_faces, base_image, result):
-# def test_idnetify_faces_image(parameters, result):
     show_detected = False
-   
-    # test_img = cv2.imread(test_faces.strip())
-    # face_number,imgs_detected_test = face_detect.detect_face(test_img)
-
-    # base_img = cv2.imread(base_image.strip())
-    # _,img_detected_base = face_detect.detect_face(base_img)
-
-    # sys.argv[1] = test_faces
-    # sys.argv[2] = test_movie
-    # sys.argv[3] = base_image
-
     assert face_detect.idnetify_faces_image_new(test_faces, base_image, show_detected) == result
+    print("every things have done")
+
+@pytest.mark.parametrize("base_image , result",[
+    ("D:\\work\\github\\face-detect\\IMG_20150925_153809.jpg",2),
+    ("D:\\work\\github\\face-detect\\ID-Card1.jpg",1),
+    ("",0),
+    (" ",0),
+])
+def test_detect_face(base_image, result):
+    base_img = cv2.imread(base_image.strip())
+    i,detected = face_detect.detect_face(base_img)
+    assert i == result 
+    assert len(detected) == result
+    for i in range(len(detected)):
+        assert len(detected[i]) > 50
+    print("every things have done")

@@ -10,11 +10,12 @@ def check_path_image(img_path):
         return False
     return True
 
+#This function needs the paths of images rather than the images itselve.
 def idnetify_faces_image_new(test_faces,img_detected_base,show_detected):
     results=[]
 
     if not check_path_image(img_detected_base) or not check_path_image(test_faces):
-        return False
+        return [False]
     
     test_img = cv2.imread(test_faces.strip())
     face_number,imgs_detected_test = detect_face(test_img)
@@ -128,7 +129,7 @@ def idnetify_faces_movie(captured,base_img):
 def detect_face(base_img):
     faces = face_cascade.detectMultiScale(base_img,1.1,10)
     i=0
-    faces_img=[[0],[0],[0],[0]]
+    faces_img=[]
     for (x,y,w,h) in faces:
         face = base_img[y:y+h, x:x+w]
         faces_img.insert(i, face)
@@ -136,18 +137,18 @@ def detect_face(base_img):
     
     return [i,faces_img]
 
-def check_arguments(args_person_image,args_test_image="",args_test_movie=""):
-    exit_status = True
-    if not args_person_image:
-        print("--person_image is a mandatory argument. you may type -h for more help.")
-        exit_status = False
+# def check_arguments(args_person_image,args_test_image="",args_test_movie=""):
+#     exit_status = True
+#     if not args_person_image:
+#         print("--person_image is a mandatory argument. you may type -h for more help.")
+#         exit_status = False
     
-    img = cv2.imread(args_person_image.strip())
-    if img is None:
-        print("The main argument is empty.")
-        exit_status = False
+#     img = cv2.imread(args_person_image.strip())
+#     if img is None:
+#         print("The main argument is empty.")
+#         exit_status = False
     
-    return exit_status
+#     return exit_status
     
 
 
@@ -162,7 +163,7 @@ def main():
     # haar_model = os.path.join(cv2_base_dir, 'data/haarcascade_frontalface_default.xml')
     # face_cascade = cv2.CascadeClassifier(haar_model)
     # path_save_faces = 'face.jpg'
-    idnetify_faces_image_new(args.test_image,args.person_image,False)
+    ##### idnetify_faces_image_new(args.test_image,args.person_image,False)
     # check_arguments(args.person_image)
     if not args.person_image:
         print("--person_image is a mandatory argument. you may type -h for more help.")
