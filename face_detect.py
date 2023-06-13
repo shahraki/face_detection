@@ -10,6 +10,80 @@ def check_path_image(img_path):
         return False
     return True
 
+def find_faces(image_path,scale_factor,min_neighbors):
+    try:
+        base_img = cv2.imread(image_path.strip())
+        window_name="To find..."
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window_name, base_img.shape[0:2][1], base_img.shape[0:2][0])
+        cv2.imshow(window_name,base_img)
+        cv2.waitKey(0)
+        return face_cascade.detectMultiScale(base_img,scale_factor,min_neighbors)
+    except IOError as e:
+        print("I/O error({0}): {1}".format(e.errno, e.strerror))
+
+def draw_rectangle(bigimg,faces2,aspect,cosine_score,cosine_similarity_threshold):
+    if cosine_score >= cosine_similarity_threshold:
+        for (x,y,w,h) in faces2:
+            cv2.rectangle(bigimg,(int(x*(1/aspect)),int((y)*(1/aspect))),(int((x+w)*(1/aspect)),int((y+h)*(1/aspect))),(255,0,0),2)
+
+#This function needs the paths of a movie and the image rather than itselve.
+def idnetify_faces_movie_new(test_movie,person_image):
+    results = True
+    aspect=1
+    scale_factor=1.1
+    min_neighbors=10
+
+    # faces1 = find_faces(person_image,scaleFactor,minNeighbors)
+
+    try:
+        base_img = cv2.imread(person_image.strip())
+        img1 = cv2.resize(base_img, (0, 0), fx=aspect, fy=aspect)
+        window_name="To find..."
+        cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window_name, base_img.shape[0:2][1], base_img.shape[0:2][0])
+        cv2.imshow(window_name,base_img)
+        cv2.waitKey(0)
+        faces1 = face_cascade.detectMultiScale(img1,scale_factor,min_neighbors)
+    except IOError as e:
+        print("I/O error({0}): {1}".format(e.errno, e.strerror))
+        results = False
+    
+    cv2.namedWindow('the movie', cv2.WINDOW_NORMAL)
+    # To capture from file
+    captured = cv2.VideoCapture(test_movie.strip())
+    while True:
+        _,bigimg = captured.read()
+        if bigimg is not None:
+            img2 = cv2.resize(bigimg, (0, 0), fx=aspect, fy=aspect)
+            
+            faces2 = face_cascade.detectMultiScale(img2,scale_factor,min_neighbors)
+            recognizer = cv2.FaceRecognizerSF.create("D:\\work\\github\\face-detect\\face_recognition_sface_2021dec_int8.onnx","")
+            
+            if len(faces2) > 0 :
+                face1_align = recognizer.alignCrop(img1, faces1[0])
+                face2_align = recognizer.alignCrop(img2, faces2[0])
+
+                # Extract features
+                face1_feature = recognizer.feature(face1_align)
+                face2_feature = recognizer.feature(face2_align)
+
+                cosine_similarity_threshold = 0.363
+                cosine_score = recognizer.match(face1_feature, face2_feature, cv2.FaceRecognizerSF_FR_COSINE)
+                
+                # [cv2.rectangle(bigimg,(int(x*(1/aspect)),int((y)*(1/aspect))),(int((x+w)*(1/aspect)),int((y+h)*(1/aspect))),(255,0,0),2) for (x,y,w,h) in faces2 if cosine_score >= cosine_similarity_threshold]
+                draw_rectangle(bigimg,faces2,aspect,cosine_score,cosine_similarity_threshold)
+                                            
+            cv2.imshow("the movie",bigimg)
+            k = cv2.waitKey(30) & 0xff
+            if k==27:
+                break
+        else:
+            break
+
+    cv2.destroyAllWindows()
+    return results
+
 #This function needs the paths of images rather than the images itselve.
 def idnetify_faces_image_new(test_faces,img_detected_base,show_detected):
     results=[]
@@ -165,9 +239,11 @@ def main():
     # path_save_faces = 'face.jpg'
     ##### idnetify_faces_image_new(args.test_image,args.person_image,False)
     # check_arguments(args.person_image)
+    idnetify_faces_movie_new(args.test_movie,args.person_image)
     if not args.person_image:
         print("--person_image is a mandatory argument. you may type -h for more help.")
         sys.exit(0)
+        
     else:
         # base_img = cv2.imread("D:\\work\\github\\face-detect\\ID-Card 1.jpg")
         base_img = cv2.imread(args.person_image.strip())
