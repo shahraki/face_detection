@@ -41,10 +41,13 @@ def find_faces(image_path, scale_factor, min_neighbors, main_img, show_image):
         print("I/O error({0}): {1}".format(e.errno, e.strerror))
         return []
 
-def idnetify_faces_image(face_number, test_image, test_faces, base_img, img_detected_base, show_detected,test_detected_img=""):
+def idnetify_faces_image(scale_factor, face_number, test_image, test_faces, base_img, img_detected_base, show_detected,test_detected_img=""):
     results = []
+    scale = 1.0
     # recognizer = cv2.FaceRecognizerSF.create("D:\\work\\github\\face-detect\\face_recognition_sface_2021dec_int8.onnx","")
-    
+    score_threshold = 0.9
+    nms_threshold = 0.3
+    top_k = 5000
     cosine_similarity_threshold = 0.363
     # cosine_similarity_threshold = 0.7
     cosine_score = []
@@ -54,10 +57,23 @@ def idnetify_faces_image(face_number, test_image, test_faces, base_img, img_dete
         window_name="not detected"
         results.append(False)
         
-        recognizer = cv2.FaceRecognizerSF.create("D:\\work\\github\\face-detect\\face_recognition_sface_2021dec_int8.onnx","")
-        
-        face1_align = recognizer.alignCrop(base_img, img_detected_base[0])
-        face2_align = recognizer.alignCrop(test_image, test_faces[index])
+        recognizer = cv2.FaceRecognizerSF.create("D:\\work\\github\\face-detect\\face_recognition_sface_2021dec.onnx","")
+        detector = cv2.FaceDetectorYN.create("D:\\work\\github\\face-detect\\face_detection_yunet_2023mar.onnx","",(320, 320),score_threshold,nms_threshold,top_k)
+                
+        img1Width = int(base_img.shape[1]*scale)
+        img1Height = int(base_img.shape[0]*scale)
+        base_img1 = cv2.resize(base_img, (img1Width, img1Height))
+        detector.setInputSize((img1Width, img1Height))
+        # detector.setInputSize((base_img.shape[1], base_img.shape[0]))
+        faces1 = detector.detect(base_img1)
+        assert faces1[1] is not None, 'Cannot find a face in {}'.format(args.image1)
+
+        detector.setInputSize((test_image.shape[1], test_image.shape[0]))
+        faces2 = detector.detect(test_image)
+        assert faces2[1] is not None, 'Cannot find a face in {}'.format(args.image2)
+
+        face1_align = recognizer.alignCrop(base_img, faces1[1][0])
+        face2_align = recognizer.alignCrop(test_image, faces2[1][index])
         
         # Extract features
         face2_feature = recognizer.feature(face2_align)
@@ -103,7 +119,7 @@ def main():
             print("No Face detected in the test image.")
             return False
         
-        results = idnetify_faces_image(len(test_detected), test_image,test_detected, base_img, img_detected_base,True,test_detected_img)
+        results = idnetify_faces_image(scale_factor,len(test_detected), test_image,test_detected, base_img, img_detected_base,True,test_detected_img)
 
         i = [ index for found in results if found]
         print("There are {} faces who are identified by the algorithm".format(i))
