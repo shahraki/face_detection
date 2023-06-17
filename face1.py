@@ -89,15 +89,21 @@ def idnetify_faces(face_number, person_image_faces, test_image_faces,show_detect
     print("The main proccess took " + str(tm.getTimeMilli()) + " milliseconds")
     return results
 
-def idnetify_faces_movie(captured,base_img):
-    base_scale=1
-    test_scale=1
+def idnetify_faces_movie(captured,person_image_faces):
+    base_scale=0.5
+    test_scale=0.5
     cv2.namedWindow('the movie', cv2.WINDOW_NORMAL)
-    
-    width = int(base_img.shape[1] * base_scale)
-    height = int(base_img.shape[0] * base_scale)
+
+    face_person_image_np = np.asarray(person_image_faces[0],dtype=np.uint8)
+    cv2.imwrite(path_save_faces,face_person_image_np)
+    person_image_faces_reread = cv2.imread(path_save_faces)
+    os.remove(path_save_faces)
+    # person_image_faces_reread_gray = cv2.cvtColor(person_image_faces_reread, cv2.COLOR_BGR2GRAY)
+
+    width = int(person_image_faces_reread.shape[1] * base_scale)
+    height = int(person_image_faces_reread.shape[0] * base_scale)
     dim = (width, height)
-    person_image_resized = cv2.resize(base_img[0], dim)
+    person_image_resized = cv2.resize(person_image_faces_reread, dim)
     
     # person_image_resized= cv2.resize(base_img[0], (int(base_img[0].shape[1]*base_scale), int(base_img[0].shape[0]*base_scale)))
     
@@ -108,11 +114,13 @@ def idnetify_faces_movie(captured,base_img):
         if test_image_org is None:
             return
         if test_scale != 1:
-            test_image= cv2.resize(test_image_org, (int(test_image_org.shape[1]*base_scale), int(test_image_org.shape[0]*base_scale)))
+            test_image= cv2.resize(test_image_org, (int(test_image_org.shape[1]*test_scale), int(test_image_org.shape[0]*test_scale)))
+        else:
+            test_image = test_image_org.copy()
         face_locations = face_recognition.face_locations(test_image)
-        faces_encodings = face_recognition.face_encodings(test_image)
-        
-        if faces_encodings.__len__() > 0:
+                
+        if face_locations.__len__() > 0:
+            faces_encodings = face_recognition.face_encodings(test_image)
             matches = face_recognition.compare_faces(faces_encodings,person_image_encoding)
             i=0
             for match in matches:
@@ -121,62 +129,11 @@ def idnetify_faces_movie(captured,base_img):
                     cv2.rectangle(test_image_org,(int(h*(1/test_scale)),int(x*(1/test_scale))),(int(y*(1/test_scale)),int(w*(1/test_scale))),(255,0,0),2)
                     i+=1
     
-        cv2.imshow("the movie",test_image)
+        cv2.imshow("the movie",test_image_org)
         k = cv2.waitKey(30) & 0xff
         if k==27:
             break
-        
-
-    # scale = 0.3
-    # results = []
-    # tm = cv2.TickMeter()
     
-    # _,_,person_image_faces = find_faces(base_img,scale_factor,min_neighbors,True,False)
-
-    # face_person_image_np = np.asarray(person_image_faces[0],dtype=np.uint8)
-    # cv2.imwrite(path_save_faces,face_person_image_np)
-    # person_image_faces_reread = cv2.imread(path_save_faces)
-
-    # if scale != 1:
-    #     person_image_faces_reread = cv2.resize(person_image_faces_reread, (int(person_image_faces_reread.shape[1]*scale), int(person_image_faces_reread.shape[0]*scale)))
-    
-    # face_person_image_reread_encoding = face_recognition.face_encodings(person_image_faces_reread)[0]
-    # os.remove(path_save_faces)
-
-    # _,test_image = captured.read()
-
-    # _,_,test_image_faces = find_faces(test_image,scale_factor,min_neighbors,False,False)
-
-    # test_image_faces_np_reread_encoding = []
-    # for index in range(len(test_image_faces)):
-    #     test_image_faces_np = np.asarray(test_image_faces[index],dtype=np.uint8)
-    #     cv2.imwrite(path_save_faces,test_image_faces_np)
-    #     test_image_faces_np_reread = cv2.imread(path_save_faces)
-    #     # if scale != 1:
-    #     #     test_image_faces_np_reread = cv2.resize(test_image_faces_np_reread, (int(test_image_faces_np_reread.shape[1]*scale), int(test_image_faces_np_reread.shape[0]*scale)))
-    #     test_image_faces_np_reread_encoding.append(face_recognition.face_encodings(test_image_faces_np_reread)[0])
-    #     os.remove(path_save_faces)
-
-    # if test_image_faces_np_reread_encoding[0].__len__() > 0:
-    #     tm.start()
-    #     results = face_recognition.compare_faces(test_image_faces_np_reread_encoding, face_person_image_reread_encoding)
-    #     tm.stop()
-    #     index = 0
-    #     for result in results:
-    #         if result:
-    #             x,y,w,h = face_locations[i]
-    #             cv2.rectangle(test_image,(int(h*(1/scale)),int(x*(1/scale))),(int(y*(1/scale)),int(w*(1/scale))),(255,0,0),2)
-    #             i+=1
-                
-    #             cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    #             cv2.resizeWindow(window_name, test_image_faces[index].shape[0:2][1], test_image_faces[index].shape[0:2][0])
-    #             cv2.imshow(window_name,test_image_faces[index])
-    #         index+=1
-    
-    # if show_detected:
-    #     cv2.waitKey(0)
-    #     cv2.destroyAllWindows()
-
 def main():
     tm = cv2.TickMeter()
     parser = argparse.ArgumentParser()
@@ -220,7 +177,7 @@ def main():
             # captured = cv2.VideoCapture("D:\\work\\github\\face-detect\\VID_20150718_134620.mp4")
             captured = cv2.VideoCapture(args.test_movie.strip())
         
-        idnetify_faces_movie(captured,person_image)
+        idnetify_faces_movie(captured,person_image_faces)
         captured.release()
 
 
