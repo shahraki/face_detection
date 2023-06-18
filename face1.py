@@ -98,25 +98,20 @@ def idnetify_faces_movie(captured,person_image_faces):
     cv2.imwrite(path_save_faces,face_person_image_np)
     person_image_faces_reread = cv2.imread(path_save_faces)
     os.remove(path_save_faces)
-    # person_image_faces_reread_gray = cv2.cvtColor(person_image_faces_reread, cv2.COLOR_BGR2GRAY)
-
+    
     width = int(person_image_faces_reread.shape[1] * base_scale)
     height = int(person_image_faces_reread.shape[0] * base_scale)
     dim = (width, height)
     person_image_resized = cv2.resize(person_image_faces_reread, dim)
     
-    # person_image_resized= cv2.resize(base_img[0], (int(base_img[0].shape[1]*base_scale), int(base_img[0].shape[0]*base_scale)))
-    
     person_image_encoding = face_recognition.face_encodings(person_image_resized)[0]
-    
-    while True:
-        _,test_image_org = captured.read()
-        if test_image_org is None:
-            return
+    _,test_image_org = captured.read()
+    while test_image_org is not None:
         if test_scale != 1:
             test_image= cv2.resize(test_image_org, (int(test_image_org.shape[1]*test_scale), int(test_image_org.shape[0]*test_scale)))
         else:
             test_image = test_image_org.copy()
+
         face_locations = face_recognition.face_locations(test_image)
                 
         if face_locations.__len__() > 0:
@@ -128,11 +123,13 @@ def idnetify_faces_movie(captured,person_image_faces):
                     x,y,w,h = face_locations[i]
                     cv2.rectangle(test_image_org,(int(h*(1/test_scale)),int(x*(1/test_scale))),(int(y*(1/test_scale)),int(w*(1/test_scale))),(255,0,0),2)
                     i+=1
-    
+        
         cv2.imshow("the movie",test_image_org)
         k = cv2.waitKey(30) & 0xff
         if k==27:
             break
+         
+        _,test_image_org = captured.read()
     
 def main():
     tm = cv2.TickMeter()
@@ -148,7 +145,7 @@ def main():
         # sys.exit(0)
         return False
     else:
-        person_image,_,person_image_faces = find_faces(args.person_image.strip(),scale_factor,min_neighbors,True,True)
+        _,_,person_image_faces = find_faces(args.person_image.strip(),scale_factor,min_neighbors,True,True)
         if person_image_faces is None:
             print("The main argument is empty.")
             return False
