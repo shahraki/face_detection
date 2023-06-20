@@ -22,11 +22,9 @@ def find_faces(image_path, scale_factor, min_neighbors, main_img, show_image):
             i+=1
             if main_img:
                 window_name="To find..."
-                # image_to_show = base_img
             else:
                 window_name="image"+str(i)
-                # image_to_show = base_img
-            
+                        
         if show_image:    
             cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
             cv2.resizeWindow(window_name, base_img.shape[0:2][1], base_img.shape[0:2][0])
